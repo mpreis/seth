@@ -12,17 +12,15 @@ SRCS = ./tests/correlation_property_test/cpt.cpp \
 		./encryption/xor_otp/xor_otp_cstd.cpp \
 		./encryption/xor_otp/xor_otp_rc4.cpp \
 		./encryption/xor_short_key/xor_short_key.cpp \
-		./encryption/xor_followers/xor_followers.cpp
-BUILDDIR = ../build/
-CXXFLAGS=-std=c++0x 
+		./encryption/xor_followers/xor_followers.cpp 
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
-all: mac
+BUILDDIR = ../build/
 
-server: $(PROG).o $(OBJS) 
-	g++ $(CXXFLAGS) -o $(PROG) $(PROG).cpp $(SRCS) -lm -lpthread -I/usr/X11R6/include -L/usr/X11R6/lib -lm -lpthread -lX11 
-	mv $(PROG) $(BUILDDIR)
+CXXFLAGS=-std=c++0x
 
-mac: $(PROG).o $(OBJS)
+all: seth
+
+seth:
 	g++ $(CXXFLAGS) -o $(PROG) $(PROG).cpp $(SRCS) -lm -lpthread -I/usr/X11R6/include 
 	mv $(PROG) $(BUILDDIR)
 

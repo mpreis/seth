@@ -16,12 +16,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <map>
-#include <sstream>
-#include <string>
 
 static void init();
 static int run_experiment();
