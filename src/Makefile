@@ -14,7 +14,7 @@ SRCS = ./tests/correlation_property_test/cpt.cpp \
 		./encryption/xor_short_key/xor_short_key.cpp \
 		./encryption/xor_followers/xor_followers.cpp
 BUILDDIR = ../build/
-CXXFLAGS=-std=c++11 
+CXXFLAGS=-std=c++0x 
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
 all: mac
 
