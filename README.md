@@ -31,7 +31,7 @@ List of available flags
   * `-e {<encryption>}` list of encryptions to executed (min. 1)
   * `-k <number of keys>` number of random generated keys applied on each image (default: 1)
 
-#### Tests
+#### Evaluation methods
   * `all` runs all tests
   * `npcr` NPCR
   * `uaci` UACI
