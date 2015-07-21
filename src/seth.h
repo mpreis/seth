@@ -25,6 +25,7 @@
   #include "./encryption/xor_otp/xor_otp_cstd.h"
   #include "./encryption/xor_short_key/xor_short_key.h"
   #include "./encryption/xor_followers/xor_followers.h"
+  #include "./encryption/aes/aes.h"
 
   #define VERSION 0.1
   #define kDefaultRights 0700
@@ -84,6 +85,15 @@
   const std::string ENC_XOR_FOLLOWERS_8   = "xor-followers-8";
   const std::string ENC_XOR_FOLLOWERS_32  = "xor-followers-32";
   const std::string ENC_XOR_FOLLOWERS_256 = "xor-followers-256";
+  const std::string ENC_AES_ECB_128       = "aes-ecb-128";
+  const std::string ENC_AES_ECB_192       = "aes-ecb-192";
+  const std::string ENC_AES_ECB_256       = "aes-ecb-256";
+  const std::string ENC_AES_CBC_128       = "aes-cbc-128";
+  const std::string ENC_AES_CBC_192       = "aes-cbc-192";
+  const std::string ENC_AES_CBC_256       = "aes-cbc-256";
+  const std::string ENC_AES_CFB_128       = "aes-cfb-128";
+  const std::string ENC_AES_CFB_192       = "aes-cfb-192";
+  const std::string ENC_AES_CFB_256       = "aes-cfb-256";
 
   const std::string CSV_VALUE_SEP = ";";
   const std::string CSV_LINE_SEP = "\n";

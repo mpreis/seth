@@ -21,6 +21,7 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <string>
 
 static void init();
 static int run_experiment();
@@ -97,6 +98,16 @@ init() {
   enc_funcs[ENC_XOR_FOLLOWERS_8] = run_enc_xor_followers_8;
   enc_funcs[ENC_XOR_FOLLOWERS_32] = run_enc_xor_followers_32;
   enc_funcs[ENC_XOR_FOLLOWERS_256] = run_enc_xor_followers_256;
+  enc_funcs[ENC_AES_ECB_128] = run_enc_aes_ecb_128;
+  enc_funcs[ENC_AES_ECB_192] = run_enc_aes_ecb_192;
+  enc_funcs[ENC_AES_ECB_256] = run_enc_aes_ecb_256;
+  enc_funcs[ENC_AES_CBC_128] = run_enc_aes_cbc_128;
+  enc_funcs[ENC_AES_CBC_192] = run_enc_aes_cbc_192;
+  enc_funcs[ENC_AES_CBC_256] = run_enc_aes_cbc_256;
+  enc_funcs[ENC_AES_CFB_128] = run_enc_aes_cfb_128;
+  enc_funcs[ENC_AES_CFB_192] = run_enc_aes_cfb_192;
+  enc_funcs[ENC_AES_CFB_256] = run_enc_aes_cfb_256;
+
   /* decryption */
   dec_funcs[ENC_ORIGIN] = run_dec_origin;
   dec_funcs[ENC_ARNOLD] = run_dec_arnold;
@@ -115,6 +126,16 @@ init() {
   dec_funcs[ENC_XOR_FOLLOWERS_8] = run_dec_xor_followers_8;
   dec_funcs[ENC_XOR_FOLLOWERS_32] = run_dec_xor_followers_32;
   dec_funcs[ENC_XOR_FOLLOWERS_256] = run_dec_xor_followers_256;
+  dec_funcs[ENC_AES_ECB_128] = run_dec_aes_ecb_128;
+  dec_funcs[ENC_AES_ECB_192] = run_dec_aes_ecb_192;
+  dec_funcs[ENC_AES_ECB_256] = run_dec_aes_ecb_256;
+  dec_funcs[ENC_AES_CBC_128] = run_dec_aes_cbc_128;
+  dec_funcs[ENC_AES_CBC_192] = run_dec_aes_cbc_192;
+  dec_funcs[ENC_AES_CBC_256] = run_dec_aes_cbc_256;
+  dec_funcs[ENC_AES_CFB_128] = run_dec_aes_cfb_128;
+  dec_funcs[ENC_AES_CFB_192] = run_dec_aes_cfb_192;
+  dec_funcs[ENC_AES_CFB_256] = run_dec_aes_cfb_256;
+
   /* set key function */
   set_key_funcs[ENC_ORIGIN] = set_key_xor_origin;
   set_key_funcs[ENC_ARNOLD] = set_key_arnold;
@@ -133,6 +154,16 @@ init() {
   set_key_funcs[ENC_XOR_FOLLOWERS_256] = set_key_xor_followers;
   set_key_funcs[ENC_XOR_OTP_CSTD_MSB] = set_key_xor_otp_cstd;
   set_key_funcs[ENC_XOR_OTP_CSTD_PIX] = set_key_xor_otp_cstd;
+  set_key_funcs[ENC_AES_ECB_128] = set_key_aes;
+  set_key_funcs[ENC_AES_ECB_192] = set_key_aes;
+  set_key_funcs[ENC_AES_ECB_256] = set_key_aes;
+  set_key_funcs[ENC_AES_CBC_128] = set_key_aes;
+  set_key_funcs[ENC_AES_CBC_192] = set_key_aes;
+  set_key_funcs[ENC_AES_CBC_256] = set_key_aes;
+  set_key_funcs[ENC_AES_CFB_128] = set_key_aes;
+  set_key_funcs[ENC_AES_CFB_192] = set_key_aes;
+  set_key_funcs[ENC_AES_CFB_256] = set_key_aes;
+
   /* set key modified function */
   set_key_modified_funcs[ENC_ORIGIN] = set_key_modified_origin;
   set_key_modified_funcs[ENC_ARNOLD] = set_key_modified_arnold;
@@ -154,6 +185,16 @@ init() {
     set_key_modified_xor_followers_32;
   set_key_modified_funcs[ENC_XOR_FOLLOWERS_256] =
     set_key_modified_xor_followers_256;
+  set_key_modified_funcs[ENC_AES_ECB_128] = set_key_aes;
+  set_key_modified_funcs[ENC_AES_ECB_192] = set_key_aes;
+  set_key_funcs[ENC_AES_ECB_256] = set_key_aes;
+  set_key_modified_funcs[ENC_AES_CBC_128] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_AES_CBC_192] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_AES_CBC_256] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_AES_CFB_128] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_AES_CFB_192] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_AES_CFB_256] = set_key_modified_aes;
+
   /* checks / tests */
   test_funcs[TEST_CPRT_V] = run_test_cprt_vertical;
   test_funcs[TEST_CPRT_H] = run_test_cprt_horizontal;
@@ -215,7 +256,6 @@ static int run_experiment() {
           return EXIT_FAILURE;
         }
 
-        // printf("%s ", (*ie).c_str());
         /* build name of encrypted file */
         std::string enc_filename("");
         std::string dec_filename("");
@@ -226,11 +266,12 @@ static int run_experiment() {
           enc_filename.append(*ie);
           enc_filename.append("_" + std::to_string(static_cast<int>(i)));
           enc_filename.append(get_extension(*ii));
+
           dec_filename.append(outdir_imgs);
           dec_filename.append(get_filename(*ii));
           dec_filename.append("_dec_");
           dec_filename.append(*ie);
-          enc_filename.append("_" + std::to_string(static_cast<int>(i)));
+          dec_filename.append("_" + std::to_string(static_cast<int>(i)));
           dec_filename.append(get_extension(*ii));
         } else {
           enc_filename.append(*ii);

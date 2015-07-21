@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+
+# Other stuff
+.DS_Store
+./src/libraries/.DS_Store
+*/.DS_Store
+out/
+build/
