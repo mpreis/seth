@@ -22,7 +22,7 @@ CXXFLAGS=-std=c++0x
 all: seth
 
 seth:
-	g++ $(CXXFLAGS) -o $(PROG) $(PROG).cpp $(SRCS) -lm -lpthread -I/usr/X11R6/include -lcryptopp -Ilibraries/cryptopp562
+	g++ $(CXXFLAGS) -o $(PROG) $(PROG).cpp $(SRCS) -lm -lpthread -I/usr/X11R6/include -lcryptopp -Llibraries/cryptopp562
 	mv $(PROG) $(BUILDDIR)
 
 clean:

@@ -9,6 +9,6 @@ fullclean: clean
 	find . -type f -name '*.o' -delete
 
 cryptopp:
-	cd ./src/libraries/cryptopp562/; make
+	cd ./src/libraries/cryptopp562/; make static
 	cd ../../../
 	
