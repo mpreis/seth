@@ -1,4 +1,4 @@
-// Copyright (c) 2015, the Seth Project Authors.  All rights reserved.
+// Copyright (c) 2016, the Seth Project Authors.  All rights reserved.
 // Please see the AUTHORS file for details.  Use of this source code is
 // governed  by a BSD license that can be found in the LICENSE file.
 
@@ -48,6 +48,7 @@ static std::list<std::string> args_imgs;
 static std::list<std::string> args_tests;
 static uint32_t kNrOfKeys;
 static bool kLessOutputFiles;
+static bool kRawOutput;
 /* origin method: needed to run tests without encryption */
 void run_enc_origin(struct img_info_t *img_info) {}
 void run_dec_origin(struct img_info_t *img_info) {}
@@ -107,6 +108,7 @@ init() {
   enc_funcs[ENC_AES_CFB_128] = run_enc_aes_cfb_128;
   enc_funcs[ENC_AES_CFB_192] = run_enc_aes_cfb_192;
   enc_funcs[ENC_AES_CFB_256] = run_enc_aes_cfb_256;
+  enc_funcs[ENC_2D_LOG_MAP_256] = run_enc_2d_logistic_map;
 
   /* decryption */
   dec_funcs[ENC_ORIGIN] = run_dec_origin;
@@ -135,6 +137,7 @@ init() {
   dec_funcs[ENC_AES_CFB_128] = run_dec_aes_cfb_128;
   dec_funcs[ENC_AES_CFB_192] = run_dec_aes_cfb_192;
   dec_funcs[ENC_AES_CFB_256] = run_dec_aes_cfb_256;
+  dec_funcs[ENC_2D_LOG_MAP_256] = run_dec_2d_logistic_map;
 
   /* set key function */
   set_key_funcs[ENC_ORIGIN] = set_key_xor_origin;
@@ -163,6 +166,7 @@ init() {
   set_key_funcs[ENC_AES_CFB_128] = set_key_aes;
   set_key_funcs[ENC_AES_CFB_192] = set_key_aes;
   set_key_funcs[ENC_AES_CFB_256] = set_key_aes;
+  set_key_funcs[ENC_2D_LOG_MAP_256] = set_key_2d_logistic_map;
 
   /* set key modified function */
   set_key_modified_funcs[ENC_ORIGIN] = set_key_modified_origin;
@@ -194,6 +198,7 @@ init() {
   set_key_modified_funcs[ENC_AES_CFB_128] = set_key_modified_aes;
   set_key_modified_funcs[ENC_AES_CFB_192] = set_key_modified_aes;
   set_key_modified_funcs[ENC_AES_CFB_256] = set_key_modified_aes;
+  set_key_modified_funcs[ENC_2D_LOG_MAP_256] = set_key_modified_2d_logistic_map;
 
   /* checks / tests */
   test_funcs[TEST_CPRT_V] = run_test_cprt_vertical;
@@ -208,9 +213,11 @@ init() {
   test_funcs[TEST_KESE] = run_test_kese;
   test_funcs[TEST_GRSV] = run_test_grsv;
   test_funcs[TEST_GRSH] = run_test_grsh;
+  test_funcs[TEST_NIST] = run_test_nist;
   // test_funcs[TEST_RGBH] = NULL;
   kNrOfKeys = 1;
   kLessOutputFiles = false;
+  kRawOutput = false;
   mkdir(OUT_DIR.c_str(), kDefaultRights);
 }
 
@@ -223,16 +230,16 @@ static int run_experiment() {
     args_encs.push_front(ENC_ORIGIN);
 
   if (args_imgs.empty() || (args_encs.empty() && args_tests.empty())) {
-    printf("ERROR: invalid combination of arguments (see help).\n");
+    printf("ERROR: invalid combination of arguments (see help -h -h).\n");
     return EXIT_FAILURE;
   }
 
   printf("start-time: %s\n", current_date_time().c_str());
 
-  /* iterate over images */
   std::map<std::string, std::map<std::string, std::list<double> > >
     all_samples;
 
+  /* iterate over images */
   for (std::list<std::string>::iterator ii = args_imgs.begin();
       ii != args_imgs.end(); ii++) {
     printf("  %s ... ", (*ii).c_str());
@@ -246,10 +253,12 @@ static int run_experiment() {
       bool setup_header = true;
       std::string csv_header("");
       std::string csv_data("");
+
       /* iterate over encryptions */
       for (std::list<std::string>::iterator ie = args_encs.begin();
           ie != args_encs.end(); ie++) {
         csv_data.append(*ie);
+
         /* check if given encryption mode is valid. */
         if (enc_funcs.find((std::string)(*ie)) == enc_funcs.end()) {
           printf("ERROR: invalid encryption mode (%s).\n", (*ie).c_str());
@@ -264,14 +273,14 @@ static int run_experiment() {
           enc_filename.append(get_filename(*ii));
           enc_filename.append("_enc_");
           enc_filename.append(*ie);
-          enc_filename.append("_" + std::to_string(static_cast<int>(i)));
+          enc_filename.append("_" + std::to_string((long long int)(i)));
           enc_filename.append(get_extension(*ii));
 
           dec_filename.append(outdir_imgs);
           dec_filename.append(get_filename(*ii));
           dec_filename.append("_dec_");
           dec_filename.append(*ie);
-          dec_filename.append("_" + std::to_string(static_cast<int>(i)));
+          dec_filename.append("_" + std::to_string((long long int)(i)));
           dec_filename.append(get_extension(*ii));
         } else {
           enc_filename.append(*ii);
@@ -286,6 +295,7 @@ static int run_experiment() {
         img_info.origin = *ii;
         img_info.encrypted = enc_filename;
         img_info.decrypted = dec_filename;
+        img_info.ith_key = i;
 
         img_info.enc_func = enc_funcs[*ie];
         img_info.dec_func = dec_funcs[*ie];
@@ -306,11 +316,21 @@ static int run_experiment() {
         /* iterate over tests */
         for (std::list<std::string>::iterator it = args_tests.begin();
             it != args_tests.end(); it++) {
+
+          /* AES was only added to evaluate the performance. */
+          if(*it == TEST_KESE &&
+            (*ie == ENC_AES_CFB_128 || *ie == ENC_AES_CFB_192 || *ie == ENC_AES_CFB_256 ||
+             *ie == ENC_AES_CBC_256 || *ie == ENC_AES_CBC_192 || *ie == ENC_AES_CBC_256 ||
+             *ie == ENC_AES_ECB_128 || *ie == ENC_AES_ECB_192 || *ie == ENC_AES_ECB_256))
+          {
+            continue;
+          }
+
           double test_result = test_funcs[*it] (&img_info);
           img_info.results[*it] = test_result;
           all_samples[*ie][*it].push_front(test_result);
           csv_data.append(CSV_VALUE_SEP);
-          csv_data.append(std::to_string(static_cast<double>(test_result)));
+          csv_data.append(std::to_string((long double)(test_result)));
 
           if (*it == TEST_SEQT_S) {
             double result_seqts_0 = img_info.results[TEST_SEQT_S_0];
@@ -320,10 +340,10 @@ static int run_experiment() {
             // append order has to be in reverse order
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_1)));
+              std::to_string((long double)(result_seqts_1)));
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_0)));
+              std::to_string((long double)(result_seqts_0)));
           }
 
           if (*it == TEST_SEQT_D) {
@@ -338,16 +358,16 @@ static int run_experiment() {
             // append order has to be in reverse order
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_11)));
+              std::to_string((long double)(result_seqts_11)));
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_10)));
+              std::to_string((long double)(result_seqts_10)));
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_01)));
+              std::to_string((long double)(result_seqts_01)));
             csv_data.append(CSV_VALUE_SEP);
             csv_data.append(
-              std::to_string(static_cast<double>(result_seqts_00)));
+              std::to_string((long double)(result_seqts_00)));
           }
 
           if (setup_header) {
@@ -382,7 +402,7 @@ static int run_experiment() {
       if (!kLessOutputFiles) {
         /* create output file */
         std::ofstream outfile(outdir + get_filename(*ii) +
-          "_data_" + std::to_string(static_cast<int>(i)) + "" + CSV_FILE_EXT);
+          "_data_" + std::to_string((long long int)(i)) + "" + CSV_FILE_EXT);
         outfile << csv_header << csv_data;
         outfile.close();
       }
@@ -397,39 +417,68 @@ static int run_experiment() {
     printf("done.\n");
   }
 
-  /* create output file */
+  /* create raw output file */
   std::string csv_header_total("");
   std::string csv_data_total("");
-  bool setup_header = true;
-  for (std::map<std::string,
-                std::map<std::string, std::list<double> > >::reverse_iterator
-      ienc = all_samples.rbegin();
-      ienc != all_samples.rend(); ienc++) {
-     csv_data_total.append(ienc->first);
-     for (std::map<std::string, std::list<double> >::reverse_iterator
-          itest = ienc->second.rbegin();
-          itest != ienc->second.rend(); itest++) {
-       double avg = get_average(&itest->second);
-       double var = get_variance(&itest->second, avg);
-      if (setup_header) {
-        csv_header_total.append(CSV_VALUE_SEP);
-        csv_header_total.append(itest->first);
-        csv_header_total.append(CSV_VALUE_SEP);
-        csv_header_total.append(LABEL_VARIANCE);
+  if (kRawOutput) {
+    for (std::map<std::string,
+                  std::map<std::string, std::list<double> > >::reverse_iterator
+        ienc = all_samples.rbegin();
+        ienc != all_samples.rend(); ienc++)
+    {
+      for (std::map<std::string, std::list<double> >::reverse_iterator
+            itest = ienc->second.rbegin();
+            itest != ienc->second.rend(); itest++)
+      {
+        csv_data_total.append(ienc->first);
+        csv_data_total.append(CSV_VALUE_SEP);
+        csv_data_total.append(itest->first);
+
+        for (std::list<double>::iterator iresult = itest->second.begin();
+          iresult != itest->second.end(); iresult++)
+        {
+          csv_data_total.append(CSV_VALUE_SEP);
+          csv_data_total.append(std::to_string((long double)(*iresult)));
+        }
+        csv_data_total.append(CSV_LINE_SEP);
       }
-      csv_data_total.append(CSV_VALUE_SEP);
-      csv_data_total.append(std::to_string(static_cast<double>(avg)));
-      csv_data_total.append(CSV_VALUE_SEP);
-      csv_data_total.append(std::to_string(static_cast<double>(var)));
-     }
-     csv_data_total.append(CSV_LINE_SEP);
-     setup_header = false;
+    }
   }
-  csv_header_total.append(CSV_LINE_SEP);
+  /* create average values for output file */
+  else {
+    bool setup_header = true;
+    for (std::map<std::string,
+                  std::map<std::string, std::list<double> > >::reverse_iterator
+        ienc = all_samples.rbegin();
+        ienc != all_samples.rend(); ienc++) {
+       csv_data_total.append(ienc->first);
+
+       for (std::map<std::string, std::list<double> >::reverse_iterator
+            itest = ienc->second.rbegin();
+            itest != ienc->second.rend(); itest++) {
+         double avg = get_average(&itest->second);
+         double var = get_variance(&itest->second, avg);
+        if (setup_header) {
+          csv_header_total.append(CSV_VALUE_SEP);
+          csv_header_total.append(itest->first);
+          csv_header_total.append(CSV_VALUE_SEP);
+          csv_header_total.append(LABEL_VARIANCE);
+        }
+        csv_data_total.append(CSV_VALUE_SEP);
+        csv_data_total.append(std::to_string((long double)(avg)));
+        csv_data_total.append(CSV_VALUE_SEP);
+        csv_data_total.append(std::to_string((long double)(var)));
+       }
+       csv_data_total.append(CSV_LINE_SEP);
+       setup_header = false;
+    }
+    csv_header_total.append(CSV_LINE_SEP);
+  }
   std::ofstream total_results_out(OUT_DIR +
     OUT_TOTAL_RESLUTS_FILENAME + CSV_FILE_EXT);
   total_results_out << csv_header_total << csv_data_total;
   total_results_out.close();
+
   printf("end-time: %s\n", current_date_time().c_str());
   return EXIT_SUCCESS;
 }
@@ -469,7 +518,7 @@ get_variance(std::list<double> *l, double avg) {
   double var = 0.0;
   for (std::list<double>::iterator iter = l->begin(); iter != l->end(); iter++)
     var += pow((*iter - avg), 2);
-  return var / static_cast<double>(l->size() - 1);
+  return var / (long double)(l->size() - 1);
 }
 
 
@@ -488,15 +537,15 @@ init_args(int argc, char* argv[]) {
   char *tmp_arg_key = NULL;
   std::string s;
   if (argc == 1) {
-    printf("ERROR: to less arguments (see help). \n");
+    printf("ERROR: to less arguments (see help -h). \n");
     return EXIT_FAILURE;
   }
 
-  while ((opt = getopt(argc, argv, "d:t:e:k:lh")) != -1) {
+  while ((opt = getopt(argc, argv, "d:t:e:k:rlh")) != -1) {
     switch (opt) {
       case 'd':
         if (input) {
-          printf("ERROR: to many input files (see help). \n");
+          printf("ERROR: to many input files (see help -h). \n");
           return EXIT_FAILURE;
         }
         tmp_arg_dir = get_one_arg_argument(argc, argv, &optind);
@@ -518,6 +567,9 @@ init_args(int argc, char* argv[]) {
         break;
       case 'l':
         kLessOutputFiles = true;
+        break;
+      case 'r':
+        kRawOutput = true;
         break;
       case 'h':
         print_cmd_line_help();
@@ -619,7 +671,7 @@ static void
 print_cmd_line_help(void) {
   // print license
   std::cout << std::endl
-    << "// Copyright (c) 2015, the Seth Project Authors.  "
+    << "// Copyright (c) 2016, the Seth Project Authors.  "
     << "All rights reserved." << std::endl
     << "// Please see the AUTHORS file for details.  "
     << "Use of this source code is" << std::endl
@@ -629,6 +681,9 @@ print_cmd_line_help(void) {
   // print options
   std::cout << "options:" << std::endl
     << "  -h .................. help"
+    << std::endl
+    << "  -r .................. write raw data"
+    << " (instead of average values)"
     << std::endl
     << "  -l .................. produce less output files"
     << " (only final result)"
@@ -652,6 +707,7 @@ print_cmd_line_help(void) {
     << "  " << TEST_GRSH << " .... gray scale histogram" << std::endl
     << "  " << TEST_GRSV << " .... gray scale histogram value" << std::endl
     << "  " << TEST_KESE << " .... key sensitivity" << std::endl
+    << "  " << TEST_NIST << " .... NIST test suite" << std::endl
     << "  " << TEST_CPRT_V << " ... correlation property test vertical"
             << std::endl
     << "  " << TEST_CPRT_H << " ... correlation property test horizontal"
@@ -701,7 +757,28 @@ print_cmd_line_help(void) {
     << "  " << ENC_XOR_FOLLOWERS_32 << " ... XOR followers 32 bit key"
             << std::endl
     << "  " << ENC_XOR_FOLLOWERS_256 << " .. XOR followers 256 bit key"
-    << std::endl << std::endl;
+            << std::endl
+    << "  " << ENC_AES_ECB_128 << " ........ AES in ECB mode 128 bit key"
+            << std::endl
+    << "  " << ENC_AES_ECB_192 << " ........ AES in ECB mode 192 bit key"
+            << std::endl
+    << "  " << ENC_AES_ECB_256 << " ........ AES in ECB mode 256 bit key"
+            << std::endl
+    << "  " << ENC_AES_CBC_128 << " ........ AES in CBC mode 128 bit key"
+            << std::endl
+    << "  " << ENC_AES_CBC_192 << " ........ AES in CBC mode 192 bit key"
+            << std::endl
+    << "  " << ENC_AES_CBC_256 << " ........ AES in CBC mode 256 bit key"
+            << std::endl
+    << "  " << ENC_AES_CFB_128 << " ........ AES in CFB mode 128 bit key"
+            << std::endl
+    << "  " << ENC_AES_CFB_192 << " ........ AES in CFB mode 192 bit key"
+            << std::endl
+    << "  " << ENC_AES_CFB_256 << " ........ AES in CFB mode 256 bit key"
+            << std::endl
+    << "  " << ENC_2D_LOG_MAP_256 << " ..... 2D - logistic chaotic map 256 bit key"
+            << std::endl
+    << std::endl;
 }
 
 /******************************************************************************

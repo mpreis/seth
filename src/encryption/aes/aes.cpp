@@ -1,4 +1,4 @@
-// Copyright (c) 2015,  the Seth Project Authors.  All rights reserved.
+// Copyright (c) 2016,  the Seth Project Authors.  All rights reserved.
 // Please see the AUTHORS file for details.  Use of this source code is
 // governed  by a BSD license that can be found in the LICENSE file.
 
@@ -21,6 +21,13 @@ static void run_dec_aes_ecb(struct img_info_t *img_info, int keylength);
 CryptoPP::AutoSeededRandomPool rnd;
 CryptoPP::SecByteBlock key;
 byte iv[CryptoPP::AES::BLOCKSIZE];
+
+/* IMPORTANT NOTES:
+    AES was only added to evaluate the performance.
+    However, most of the implement evaluation test will still work.
+    There is only one exception: Key Sensitivity Test. This test
+    won't work.
+*/
 
 //
 // ECB

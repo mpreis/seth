@@ -1,4 +1,4 @@
-// Copyright (c) 2015, the Seth Project Authors.  All rights reserved.
+// Copyright (c) 2016, the Seth Project Authors.  All rights reserved.
 // Please see the AUTHORS file for details.  Use of this source code is governed
 // by a BSD license that can be found in the LICENSE file.
 
@@ -17,6 +17,7 @@
   #include "./tests/key_sensitivity_test/key_sensitivity_test.h"
   #include "./tests/grey_scale_value/grey_scale_value.h"
   #include "./tests/grey_scale_histogram/grey_scale_histogram.h"
+  #include "./tests/nist_test_suite/nist.h"
 
   /* encryptions */
   #include "./encryption/arnolds_cat_map/arnolds_cat_map.h"
@@ -26,6 +27,7 @@
   #include "./encryption/xor_short_key/xor_short_key.h"
   #include "./encryption/xor_followers/xor_followers.h"
   #include "./encryption/aes/aes.h"
+  #include "./encryption/2d_logistic_map/2d_logistic_map.h"
 
   #define VERSION 0.1
   #define kDefaultRights 0700
@@ -65,6 +67,7 @@
   const std::string TEST_KESE      = "kese";
   const std::string TEST_GRSH      = "grsh";
   const std::string TEST_PERF      = "perf";
+  const std::string TEST_NIST      = "nist";
   const std::string LABEL_VARIANCE = "variance";
 
   // origin value: needed to run tests without encryption
@@ -94,6 +97,7 @@
   const std::string ENC_AES_CFB_128       = "aes-cfb-128";
   const std::string ENC_AES_CFB_192       = "aes-cfb-192";
   const std::string ENC_AES_CFB_256       = "aes-cfb-256";
+  const std::string ENC_2D_LOG_MAP_256    = "2d-log-map-256";
 
   const std::string CSV_VALUE_SEP = ";";
   const std::string CSV_LINE_SEP = "\n";
@@ -126,6 +130,7 @@
     func_t set_key_modified_func;  // set modified key function
     int key[kMaxKeyLength];
     int key_length;
+    int ith_key;                   // indicates the i th key we try
     std::map<std::string, double> results;
   };
 

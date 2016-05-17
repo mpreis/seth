@@ -44,6 +44,7 @@ List of available flags
   * `seqts` sequence test single bit
   * `seqtd` sequence test double bit
   * `entri` entropy of image
+  * `nist` NIST test suite
 
 #### Encryptions
   * `all` runs all encryptions
@@ -64,10 +65,11 @@ List of available flags
   * `xor-followers-8` XOR followers 8 bit key
   * `xor-followers-32` XOR followers 32 bit key
   * `xor-followers-256` XOR followers 256 bit key
+  * `2d-log-map-256` 2 dimensional logistic chaotic map 256 bit key
 
 ## License
 
-Copyright (c) 2015, the Seth Project Authors. All rights reserved. 
+Copyright (c) 2016, the Seth Project Authors. All rights reserved. 
 Please see the AUTHORS file for details.
 
 Redistribution and use in source and binary forms, with or without
