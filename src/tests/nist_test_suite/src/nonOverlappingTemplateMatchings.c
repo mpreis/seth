@@ -38,7 +38,7 @@ NonOverlappingTemplateMatchings(int m, int n)
 	}
 	lambda = (M-m+1)/pow(2, m);
 	varWj = M*(1.0/pow(2.0, m) - (2.0*m-1.0)/pow(2.0, 2.0*m));
-	sprintf(directory, "templates/template%d", m);
+	sprintf(directory, "src/tests/nist_test_suite/templates/template%d", m);
 
 	if ( ((isNegative(lambda)) || (isZero(lambda))) ||
 		 ((fp = fopen(directory, "r")) == NULL) ||

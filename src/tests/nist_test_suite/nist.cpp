@@ -47,14 +47,14 @@ run_test_nist(struct img_info_t *img_info)
   int idx = 0;
   cimg_forXY(image, x, y) {
     char pixel = image(x,y);
-    epsilon[idx++] = ((pixel &   1) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &   2) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &   4) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &   8) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &  16) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &  32) == 0) ? 0 : 1;
-    epsilon[idx++] = ((pixel &  64) == 0) ? 0 : 1;
     epsilon[idx++] = ((pixel & 128) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &  64) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &  32) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &  16) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &   8) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &   4) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &   2) == 0) ? 0 : 1;
+    epsilon[idx++] = ((pixel &   1) == 0) ? 0 : 1;
   }
 
   nist_test_suite();
