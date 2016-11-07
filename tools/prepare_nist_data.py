@@ -46,7 +46,7 @@ def prepare(path):
             quotes[enc_dir][test_dir][FAILURE] = 0
 
           current_path = join(path, img_dir, 'nist', key_dir, enc_dir, test_dir)
-          results[enc_dir][test_dir].append( read_results(current_path) )
+          results[enc_dir][test_dir].extend( list(read_results(current_path)) )
 
           (s,f) = read_stats(current_path)
           quotes[enc_dir][test_dir][SUCCESS] += int(s)
@@ -105,7 +105,7 @@ def write_quotes(output, quotes):
       for test in sorted(quotes[enc]):
         total = quotes[enc][test][SUCCESS] + quotes[enc][test][FAILURE]
         if total == 0:
-          quote = 0
+          quote = 0.0
         else:
           quote = quotes[enc][test][SUCCESS] / total
 
