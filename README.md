@@ -4,7 +4,7 @@ Analysis of security evaluation methods for chaos-based encryptions.
 ## Abstract
 Over the past years a lot of different chaos-based image encryption algorithms has been proposed. In various experiments and analysis it is shown by the authors, that their encryption algorithm justifies a high security performance. This is for example done by analyzing the statistical behaviors of an encrypted image, the key sensitivity or the key space of the algorithm. There are common ways and methods to do this. Our assertion is, that just passing these tests does not guarantee a strong encryption algorithm or a high security performance. We show this by implementing obviously insecure algorithms and compare the results with well known chaos-based encryption schemes.
 
-## Building [![Build Status](https://drone.io/github.com/mpreis/seth/status.png)](https://drone.io/github.com/mpreis/seth/latest)
+## Building
 
 This is as easy as
 
